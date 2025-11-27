@@ -1,10 +1,10 @@
-# 🚀 Shell Setup
+# 🚀 Ultimate Shell
 
 Modułowy skrypt do konfiguracji nowoczesnej powłoki na serwerach Linux.  
 Jeden skrypt → profesjonalne środowisko pracy.
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/jarx88/dotfiles/main/setup-shell.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/jarx88/Ultimate-Shell/main/setup-shell.sh)
 ```
 
 ![Zsh + Starship + FZF](https://img.shields.io/badge/shell-zsh-green?style=flat-square)
@@ -36,7 +36,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/jarx88/dotfiles/main/setup-s
 ### Szybka (interaktywna)
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/USER/dotfiles/main/setup-shell.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/jarx88/Ultimate-Shell/main/setup-shell.sh)
 ```
 
 Skrypt zapyta co chcesz zainstalować.
@@ -44,15 +44,15 @@ Skrypt zapyta co chcesz zainstalować.
 ### Minimalna
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/USER/dotfiles/main/setup-shell.sh) --minimal
+bash <(curl -fsSL https://raw.githubusercontent.com/jarx88/Ultimate-Shell/main/setup-shell.sh) --minimal
 ```
 
-Instaluje tylko: zsh + fzf + starship
+Instaluje tylko: **zsh + fzf + starship**
 
 ### Pełna
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/USER/dotfiles/main/setup-shell.sh) --all
+bash <(curl -fsSL https://raw.githubusercontent.com/jarx88/Ultimate-Shell/main/setup-shell.sh) --all
 ```
 
 Instaluje wszystkie narzędzia.
@@ -60,7 +60,7 @@ Instaluje wszystkie narzędzia.
 ### Bezpieczna (najpierw podgląd)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USER/dotfiles/main/setup-shell.sh | less
+curl -fsSL https://raw.githubusercontent.com/jarx88/Ultimate-Shell/main/setup-shell.sh | less
 ```
 
 ---
@@ -83,10 +83,12 @@ shellhelp
 
 ## 🖥️ Wspierane systemy
 
-- ✅ Ubuntu / Debian / Linux Mint / Pop!_OS
-- ✅ Fedora
-- ✅ RHEL / CentOS / Rocky / AlmaLinux / Oracle Linux
-- ✅ Arch / Manjaro
+| Dystrybucja | Status |
+|-------------|--------|
+| Ubuntu / Debian / Linux Mint / Pop!_OS | ✅ |
+| Fedora | ✅ |
+| RHEL / CentOS / Rocky / AlmaLinux / Oracle Linux | ✅ |
+| Arch / Manjaro | ✅ |
 
 ---
 
@@ -138,6 +140,7 @@ extract plik.tar.gz    # Rozpakuj dowolne archiwum
 mkcd nowy-katalog      # Utwórz katalog i wejdź
 serve                  # Szybki serwer HTTP (port 8000)
 z nazwa                # Inteligentne cd (zoxide)
+shellhelp              # Pokaż ściągawkę
 ```
 
 ---
@@ -166,7 +169,8 @@ export EDITOR=nano
 
 ## 📖 Jak używać narzędzi?
 
-### FZF - Fuzzy Finder
+<details>
+<summary><b>FZF - Fuzzy Finder</b></summary>
 
 ```bash
 # Historia komend
@@ -180,8 +184,10 @@ vim **<Tab>     # Wybierz plik do edycji
 cd **<Tab>      # Wybierz katalog
 kill **<Tab>    # Wybierz proces
 ```
+</details>
 
-### Zoxide - Inteligentne cd
+<details>
+<summary><b>Zoxide - Inteligentne cd</b></summary>
 
 ```bash
 # Normalnie chodzisz po katalogach
@@ -194,8 +200,10 @@ z api           # → /home/jarek/projekty/api
 z proj api      # → dokładniejsze dopasowanie
 zi              # → interaktywny wybór z fzf
 ```
+</details>
 
-### Ripgrep - Szybki grep
+<details>
+<summary><b>Ripgrep - Szybki grep</b></summary>
 
 ```bash
 rg "TODO"                 # Szukaj w całym katalogu
@@ -204,8 +212,10 @@ rg "func" -t py           # Tylko w plikach .py
 rg "config" -g "*.yaml"   # Tylko w *.yaml
 rg "password" -l          # Tylko nazwy plików
 ```
+</details>
 
-### Lazygit - Git TUI
+<details>
+<summary><b>Lazygit - Git TUI</b></summary>
 
 ```bash
 lg    # Uruchom
@@ -219,31 +229,39 @@ lg    # Uruchom
 # ?        Pomoc
 # q        Wyjdź
 ```
+</details>
 
 ---
 
 ## ❓ FAQ
 
-### Jak wrócić do bash?
+<details>
+<summary>Jak wrócić do bash?</summary>
 
 ```bash
 chsh -s /bin/bash
 ```
+</details>
 
-### Jak zaktualizować narzędzia?
+<details>
+<summary>Jak zaktualizować narzędzia?</summary>
 
 ```bash
 # Uruchom skrypt ponownie
-bash <(curl -fsSL https://raw.githubusercontent.com/USER/dotfiles/main/setup-shell.sh) --all
+bash <(curl -fsSL https://raw.githubusercontent.com/jarx88/Ultimate-Shell/main/setup-shell.sh) --all
 ```
+</details>
 
-### Coś nie działa
+<details>
+<summary>Coś nie działa</summary>
 
 1. Wyloguj się i zaloguj ponownie
 2. Sprawdź czy `~/.local/bin` jest w PATH: `echo $PATH`
 3. Sprawdź wersję zsh: `zsh --version` (wymaga 5.8+)
+</details>
 
-### Jak odinstalować?
+<details>
+<summary>Jak odinstalować?</summary>
 
 ```bash
 # Przywróć bash
@@ -252,6 +270,7 @@ chsh -s /bin/bash
 # Usuń konfiguracje
 rm -rf ~/.zshrc ~/.config/starship.toml ~/.fzf ~/.local/bin/{starship,fzf,eza,fd,rg,bat,delta,lazygit,btop,tldr,zoxide}
 ```
+</details>
 
 ---
 
@@ -261,7 +280,7 @@ MIT
 
 ---
 
-## 🙏 Inspiracje
+## 🙏 Credits
 
 - [Oh My Zsh](https://ohmyz.sh/)
 - [Starship](https://starship.rs/)
