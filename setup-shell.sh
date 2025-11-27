@@ -677,11 +677,20 @@ install_tldr() {
 generate_zshrc() {
     log_step "Generuję konfigurację..."
 
-    # Backup existing config
+    # Backup and remove existing config (handle permission issues)
     if [[ -f "$ZSHRC" ]]; then
         cp "$ZSHRC" "${ZSHRC}.bak.$(date +%s)" 2>/dev/null || true
-        # Remove existing file to avoid permission issues
-        rm -f "$ZSHRC" 2>/dev/null || true
+        # Try normal rm first, then sudo if needed
+        if ! rm -f "$ZSHRC" 2>/dev/null; then
+            if [[ "$HAVE_SUDO" == "1" ]]; then
+                sudo rm -f "$ZSHRC" 2>/dev/null || true
+            fi
+        fi
+    fi
+
+    # Fix ownership if file still exists (created by root from previous failed install)
+    if [[ -f "$ZSHRC" ]] && [[ ! -w "$ZSHRC" ]] && [[ "$HAVE_SUDO" == "1" ]]; then
+        sudo chown "$(id -u):$(id -g)" "$ZSHRC" 2>/dev/null || true
     fi
 
     # Import historii z bash
@@ -689,8 +698,11 @@ generate_zshrc() {
         awk '!x[$0]++' "${HOME}/.bash_history" > "${HOME}/.zsh_history" 2>/dev/null || true
     fi
 
-    # Write new config
-    cat > "$ZSHRC" << 'ZSHRC'
+    # Write new config (to temp file first, then move)
+    local tmp_zshrc
+    tmp_zshrc=$(mktemp) || { log_err "Nie można utworzyć pliku tymczasowego"; return 1; }
+
+    cat > "$tmp_zshrc" << 'ZSHRC'
 # === PATH ===
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 export EDITOR="${EDITOR:-vim}"
@@ -854,7 +866,17 @@ HELP
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
 ZSHRC
 
-    log_ok "Konfiguracja zapisana"
+    # Move temp file to final location
+    if mv "$tmp_zshrc" "$ZSHRC" 2>/dev/null; then
+        log_ok "Konfiguracja zapisana"
+    elif [[ "$HAVE_SUDO" == "1" ]] && sudo mv "$tmp_zshrc" "$ZSHRC" 2>/dev/null; then
+        sudo chown "$(id -u):$(id -g)" "$ZSHRC"
+        log_ok "Konfiguracja zapisana (sudo)"
+    else
+        log_err "Nie można zapisać $ZSHRC - sprawdź uprawnienia"
+        rm -f "$tmp_zshrc"
+        return 1
+    fi
 }
 
 generate_starship_config() {
