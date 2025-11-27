@@ -676,15 +676,20 @@ install_tldr() {
 #===============================================================================
 generate_zshrc() {
     log_step "Generuję konfigurację..."
-    
-    # Backup
-    [[ -f "$ZSHRC" ]] && cp "$ZSHRC" "${ZSHRC}.bak.$(date +%s)"
-    
+
+    # Backup existing config
+    if [[ -f "$ZSHRC" ]]; then
+        cp "$ZSHRC" "${ZSHRC}.bak.$(date +%s)" 2>/dev/null || true
+        # Remove existing file to avoid permission issues
+        rm -f "$ZSHRC" 2>/dev/null || true
+    fi
+
     # Import historii z bash
     if [[ -f "${HOME}/.bash_history" ]] && [[ ! -f "${HOME}/.zsh_history" ]]; then
         awk '!x[$0]++' "${HOME}/.bash_history" > "${HOME}/.zsh_history" 2>/dev/null || true
     fi
-    
+
+    # Write new config
     cat > "$ZSHRC" << 'ZSHRC'
 # === PATH ===
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
