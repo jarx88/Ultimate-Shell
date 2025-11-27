@@ -677,11 +677,20 @@ install_tldr() {
 generate_zshrc() {
     log_step "Generuję konfigurację..."
 
-    # Backup existing config
+    # Backup and remove existing config (handle permission issues)
     if [[ -f "$ZSHRC" ]]; then
         cp "$ZSHRC" "${ZSHRC}.bak.$(date +%s)" 2>/dev/null || true
-        # Remove existing file to avoid permission issues
-        rm -f "$ZSHRC" 2>/dev/null || true
+        # Try normal rm first, then sudo if needed
+        if ! rm -f "$ZSHRC" 2>/dev/null; then
+            if [[ "$HAVE_SUDO" == "1" ]]; then
+                sudo rm -f "$ZSHRC" 2>/dev/null || true
+            fi
+        fi
+    fi
+
+    # Fix ownership if file still exists (created by root from previous failed install)
+    if [[ -f "$ZSHRC" ]] && [[ ! -w "$ZSHRC" ]] && [[ "$HAVE_SUDO" == "1" ]]; then
+        sudo chown "$(id -u):$(id -g)" "$ZSHRC" 2>/dev/null || true
     fi
 
     # Import historii z bash
@@ -689,8 +698,11 @@ generate_zshrc() {
         awk '!x[$0]++' "${HOME}/.bash_history" > "${HOME}/.zsh_history" 2>/dev/null || true
     fi
 
-    # Write new config
-    cat > "$ZSHRC" << 'ZSHRC'
+    # Write new config (to temp file first, then move)
+    local tmp_zshrc
+    tmp_zshrc=$(mktemp) || { log_err "Nie można utworzyć pliku tymczasowego"; return 1; }
+
+    cat > "$tmp_zshrc" << 'ZSHRC'
 # === PATH ===
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 export EDITOR="${EDITOR:-vim}"
@@ -850,11 +862,78 @@ shellhelp() {
 HELP
 }
 
+# === FETCH (system info) ===
+fetch() {
+    local C1 C2 NC
+    C1=$(printf '\033[1;36m')
+    C2=$(printf '\033[0;37m')
+    NC=$(printf '\033[0m')
+
+    # OS
+    local os="" kernel="" arch=""
+    [[ -f /etc/os-release ]] && os=$(. /etc/os-release && echo "$PRETTY_NAME")
+    kernel=$(uname -r)
+    arch=$(uname -m)
+
+    # Uptime
+    local uptime_str="N/A"
+    if [[ -f /proc/uptime ]]; then
+        local up_sec
+        up_sec=$(awk '{print int($1)}' /proc/uptime)
+        local days=$((up_sec / 86400))
+        local hours=$(( (up_sec % 86400) / 3600 ))
+        local mins=$(( (up_sec % 3600) / 60 ))
+        uptime_str="${days}d ${hours}h ${mins}m"
+    fi
+
+    # Memory
+    local mem="N/A"
+    if [[ -f /proc/meminfo ]]; then
+        local mem_total mem_avail mem_used
+        mem_total=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+        mem_avail=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+        mem_used=$((mem_total - mem_avail))
+        mem="${mem_used}M / ${mem_total}M"
+    fi
+
+    # Disk
+    local disk
+    disk=$(df -h / 2>/dev/null | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}')
+
+    # IPs
+    local lip pip
+    lip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    pip=$(timeout 1 curl -s ifconfig.me 2>/dev/null || echo "N/A")
+
+    echo ""
+    echo "${C1}     .--.          ${C2}OS: ${os} ${arch}${NC}"
+    echo "${C1}    |o_o |         ${C2}Kernel: ${kernel}${NC}"
+    echo "${C1}    |:_/ |         ${C2}Uptime: ${uptime_str}${NC}"
+    echo "${C1}   //    \\ \\       ${C2}Memory: ${mem}${NC}"
+    echo "${C1}  (|      | )      ${C2}Disk (/): ${disk}${NC}"
+    echo "${C1} / \\_   _/ \\\\      ${C2}Local IP: ${lip}${NC}"
+    echo "${C1} \\___)=(___/       ${C2}Public IP: ${pip}${NC}"
+    echo ""
+}
+
+# Pokaż fetch przy starcie
+fetch
+
 # === LOKALNA KONFIGURACJA ===
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
 ZSHRC
 
-    log_ok "Konfiguracja zapisana"
+    # Move temp file to final location
+    if mv "$tmp_zshrc" "$ZSHRC" 2>/dev/null; then
+        log_ok "Konfiguracja zapisana"
+    elif [[ "$HAVE_SUDO" == "1" ]] && sudo mv "$tmp_zshrc" "$ZSHRC" 2>/dev/null; then
+        sudo chown "$(id -u):$(id -g)" "$ZSHRC"
+        log_ok "Konfiguracja zapisana (sudo)"
+    else
+        log_err "Nie można zapisać $ZSHRC - sprawdź uprawnienia"
+        rm -f "$tmp_zshrc"
+        return 1
+    fi
 }
 
 generate_starship_config() {
@@ -949,18 +1028,22 @@ setup_shell() {
     
     # Zmień shell
     if [[ "$SHELL" != "$zsh_path" ]]; then
-        if chsh -s "$zsh_path" 2>/dev/null; then
+        local shell_changed=0
+
+        # Try sudo chsh first (no password prompt, no stdin)
+        if [[ "$HAVE_SUDO" == "1" ]] && sudo chsh -s "$zsh_path" "$USER" </dev/null >/dev/null 2>&1; then
+            shell_changed=1
             log_ok "Shell zmieniony na zsh"
-        else
-            # Fallback - auto-exec w bashrc
-            if ! grep -q "exec.*zsh" "$HOME/.bashrc" 2>/dev/null; then
-                cat >> "$HOME/.bashrc" << EOF
+        fi
+
+        # Fallback - auto-exec w bashrc (always add for reliability)
+        if [[ $shell_changed -eq 0 ]] && ! grep -q "exec.*zsh" "$HOME/.bashrc" 2>/dev/null; then
+            cat >> "$HOME/.bashrc" << EOF
 
 # Auto-start zsh
 [[ -z "\$ZSH_VERSION" && -x "$zsh_path" ]] && exec "$zsh_path" -l
 EOF
-                log_ok "Dodano auto-start zsh do .bashrc"
-            fi
+            log_ok "Dodano auto-start zsh do .bashrc"
         fi
     fi
 }
@@ -1002,13 +1085,13 @@ show_summary() {
     echo "  1. Wyloguj się i zaloguj ponownie"
     echo "     lub uruchom: exec zsh"
     echo ""
-    echo "  2. Wpisz ${BOLD}shellhelp${NC} żeby zobaczyć skróty"
+    echo -e "  2. Wpisz ${BOLD}shellhelp${NC} żeby zobaczyć skróty"
     echo ""
     echo "  3. Wypróbuj:"
-    echo "     ${DIM}Ctrl+R${NC}  - szukaj w historii"
-    echo "     ${DIM}z nazwa${NC} - inteligentne cd"
-    echo "     ${DIM}ll${NC}      - lista plików"
-    [[ $INSTALL_LAZYGIT -eq 1 ]] && echo "     ${DIM}lg${NC}      - lazygit"
+    echo -e "     ${DIM}Ctrl+R${NC}  - szukaj w historii"
+    echo -e "     ${DIM}z nazwa${NC} - inteligentne cd"
+    echo -e "     ${DIM}ll${NC}      - lista plików"
+    [[ $INSTALL_LAZYGIT -eq 1 ]] && echo -e "     ${DIM}lg${NC}      - lazygit"
     echo ""
 }
 
