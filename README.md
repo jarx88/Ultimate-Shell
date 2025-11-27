@@ -4,7 +4,7 @@ Modułowy skrypt do konfiguracji nowoczesnej powłoki na serwerach Linux.
 Jeden skrypt → profesjonalne środowisko pracy.
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/USER/dotfiles/main/setup-shell.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/jarx88/dotfiles/main/setup-shell.sh)
 ```
 
 ![Zsh + Starship + FZF](https://img.shields.io/badge/shell-zsh-green?style=flat-square)
