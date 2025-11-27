@@ -868,22 +868,22 @@ error_symbol = "[❯](bold red)"
 
 [time]
 disabled = false
-format = '[\[$time\]]($style) '
+format = '[\[$time\]]($style)'
 style = "white"
 time_format = "%H:%M"
 
 [username]
-format = '[$user]($style)@'
+format = '[\[$user\]]($style)'
 style_user = "bold yellow"
 show_always = true
 
 [hostname]
-format = '[$hostname]($style) '
+format = '[\[$hostname\]]($style)'
 style = "bold green"
 ssh_only = false
 
 [directory]
-format = '[$path]($style) '
+format = '[\[$path\]]($style) '
 style = "bold blue"
 truncation_length = 3
 
