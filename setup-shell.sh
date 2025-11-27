@@ -571,102 +571,111 @@ install_system_packages() {
 install_fzf() {
     [[ $INSTALL_FZF -eq 0 ]] && return
     have fzf && { log_ok "fzf już zainstalowany"; return; }
-    
+
     log_info "Instaluję fzf..."
-    git clone --depth 1 https://github.com/junegunn/fzf "$FZF_DIR" 2>/dev/null
-    "$FZF_DIR/install" --bin --key-bindings --completion --no-update-rc >/dev/null 2>&1
-    ensure_dir "$LOCAL_BIN"
-    ln -sf "$FZF_DIR/bin/fzf" "$LOCAL_BIN/fzf"
+    if timeout 60 git clone --depth 1 https://github.com/junegunn/fzf "$FZF_DIR" 2>/dev/null; then
+        "$FZF_DIR/install" --bin --key-bindings --completion --no-update-rc >/dev/null 2>&1
+        ensure_dir "$LOCAL_BIN"
+        ln -sf "$FZF_DIR/bin/fzf" "$LOCAL_BIN/fzf"
+    else
+        log_warn "Nie udało się pobrać fzf"
+    fi
 }
 
 install_starship() {
     [[ $INSTALL_STARSHIP -eq 0 ]] && return
     have starship && { log_ok "starship już zainstalowany"; return; }
-    
+
     log_info "Instaluję starship..."
     ensure_dir "$LOCAL_BIN"
-    curl -fsSL https://starship.rs/install.sh | sh -s -- --bin-dir "$LOCAL_BIN" --yes >/dev/null 2>&1
+    curl -fsSL --connect-timeout 10 --max-time 120 https://starship.rs/install.sh | sh -s -- --bin-dir "$LOCAL_BIN" --yes >/dev/null 2>&1 || log_warn "Nie udało się zainstalować starship"
 }
 
 install_zoxide() {
     [[ $INSTALL_ZOXIDE -eq 0 ]] && return
     have zoxide && { log_ok "zoxide już zainstalowany"; return; }
-    
+
     log_info "Instaluję zoxide..."
-    curl -fsSL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash >/dev/null 2>&1
+    curl -fsSL --connect-timeout 10 --max-time 60 https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash >/dev/null 2>&1 || log_warn "Nie udało się zainstalować zoxide"
 }
 
 install_eza() {
     [[ $INSTALL_EZA -eq 0 ]] && return
     (have eza || have exa) && { log_ok "eza/exa już zainstalowany"; return; }
-    
+
     log_info "Instaluję eza..."
     local version="0.18.0"
     local url="https://github.com/eza-community/eza/releases/download/v${version}/eza_x86_64-unknown-linux-gnu.tar.gz"
     [[ "$ARCH" == "arm64" ]] && url="https://github.com/eza-community/eza/releases/download/v${version}/eza_aarch64-unknown-linux-gnu.tar.gz"
-    
+
     ensure_dir "$LOCAL_BIN"
-    curl -fsSL "$url" | tar xz -C "$LOCAL_BIN" 2>/dev/null || true
+    curl -fsSL --connect-timeout 10 --max-time 60 "$url" | tar xz -C "$LOCAL_BIN" 2>/dev/null || log_warn "Nie udało się pobrać eza"
 }
 
 install_delta() {
     [[ $INSTALL_DELTA -eq 0 ]] && return
     have delta && { log_ok "delta już zainstalowany"; return; }
-    
+
     log_info "Instaluję delta..."
     local version="0.16.5"
     local url="https://github.com/dandavison/delta/releases/download/${version}/delta-${version}-x86_64-unknown-linux-gnu.tar.gz"
     [[ "$ARCH" == "arm64" ]] && url="https://github.com/dandavison/delta/releases/download/${version}/delta-${version}-aarch64-unknown-linux-gnu.tar.gz"
-    
+
     local tmp="/tmp/delta-$$"
     mkdir -p "$tmp"
-    curl -fsSL "$url" | tar xz -C "$tmp" --strip-components=1 2>/dev/null
-    ensure_dir "$LOCAL_BIN"
-    mv "$tmp/delta" "$LOCAL_BIN/" 2>/dev/null || true
+    if curl -fsSL --connect-timeout 10 --max-time 60 "$url" | tar xz -C "$tmp" --strip-components=1 2>/dev/null; then
+        ensure_dir "$LOCAL_BIN"
+        mv "$tmp/delta" "$LOCAL_BIN/" 2>/dev/null || true
+    else
+        log_warn "Nie udało się pobrać delta"
+    fi
     rm -rf "$tmp"
 }
 
 install_lazygit() {
     [[ $INSTALL_LAZYGIT -eq 0 ]] && return
     have lazygit && { log_ok "lazygit już zainstalowany"; return; }
-    
+
     log_info "Instaluję lazygit..."
     local version="0.41.0"
     local url="https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_x86_64.tar.gz"
     [[ "$ARCH" == "arm64" ]] && url="https://github.com/jesseduffield/lazygit/releases/download/v${version}/lazygit_${version}_Linux_arm64.tar.gz"
-    
+
     ensure_dir "$LOCAL_BIN"
-    curl -fsSL "$url" | tar xz -C "$LOCAL_BIN" lazygit 2>/dev/null || true
+    curl -fsSL --connect-timeout 10 --max-time 60 "$url" | tar xz -C "$LOCAL_BIN" lazygit 2>/dev/null || log_warn "Nie udało się pobrać lazygit"
 }
 
 install_btop() {
     [[ $INSTALL_BTOP -eq 0 ]] && return
     have btop && { log_ok "btop już zainstalowany"; return; }
-    
+
     log_info "Instaluję btop..."
     local version="1.3.0"
     local url="https://github.com/aristocratos/btop/releases/download/v${version}/btop-x86_64-linux-musl.tbz"
     [[ "$ARCH" == "arm64" ]] && url="https://github.com/aristocratos/btop/releases/download/v${version}/btop-aarch64-linux-musl.tbz"
-    
+
     local tmp="/tmp/btop-$$"
     mkdir -p "$tmp"
-    curl -fsSL "$url" | tar xj -C "$tmp" 2>/dev/null
-    ensure_dir "$LOCAL_BIN"
-    [[ -f "$tmp/btop/bin/btop" ]] && mv "$tmp/btop/bin/btop" "$LOCAL_BIN/"
+    if curl -fsSL --connect-timeout 10 --max-time 120 "$url" | tar xj -C "$tmp" 2>/dev/null; then
+        ensure_dir "$LOCAL_BIN"
+        [[ -f "$tmp/btop/bin/btop" ]] && mv "$tmp/btop/bin/btop" "$LOCAL_BIN/"
+    else
+        log_warn "Nie udało się pobrać btop"
+    fi
     rm -rf "$tmp"
 }
 
 install_tldr() {
     [[ $INSTALL_TLDR -eq 0 ]] && return
     have tldr && { log_ok "tldr już zainstalowany"; return; }
-    
+
     log_info "Instaluję tldr..."
-    local version="1.6.1"
-    local url="https://github.com/dbrgn/tealdeer/releases/download/v${version}/tealdeer-linux-x86_64-musl"
-    [[ "$ARCH" == "arm64" ]] && url="https://github.com/dbrgn/tealdeer/releases/download/v${version}/tealdeer-linux-arm-musleabi"
-    
+    local version="1.8.1"
+    local url="https://github.com/tealdeer-rs/tealdeer/releases/download/v${version}/tealdeer-linux-x86_64-musl"
+    [[ "$ARCH" == "arm64" ]] && url="https://github.com/tealdeer-rs/tealdeer/releases/download/v${version}/tealdeer-linux-aarch64-musl"
+
     ensure_dir "$LOCAL_BIN"
-    curl -fsSL "$url" -o "$LOCAL_BIN/tldr"
+    curl -fsSL --connect-timeout 10 --max-time 60 "$url" -o "$LOCAL_BIN/tldr" || { log_warn "Nie udało się pobrać tldr"; return; }
     chmod +x "$LOCAL_BIN/tldr"
     "$LOCAL_BIN/tldr" --update >/dev/null 2>&1 || true
 }
