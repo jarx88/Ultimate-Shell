@@ -906,13 +906,13 @@ fetch() {
     pip=$(timeout 1 curl -s ifconfig.me 2>/dev/null || echo "N/A")
 
     echo ""
-    echo "${C1}     .--.          ${C2}OS: ${os} ${arch}${NC}"
-    echo "${C1}    |o_o |         ${C2}Kernel: ${kernel}${NC}"
-    echo "${C1}    |:_/ |         ${C2}Uptime: ${uptime_str}${NC}"
-    echo "${C1}   //    \\ \\       ${C2}Memory: ${mem}${NC}"
-    echo "${C1}  (|      | )      ${C2}Disk (/): ${disk}${NC}"
-    echo "${C1} / \\_   _/ \\\\      ${C2}Local IP: ${lip}${NC}"
-    echo "${C1} \\___)=(___/       ${C2}Public IP: ${pip}${NC}"
+    echo "${C1}     .--.        ${C2}OS: ${os} ${arch}${NC}"
+    echo "${C1}    |o_o |       ${C2}Kernel: ${kernel}${NC}"
+    echo "${C1}    |:_/ |       ${C2}Uptime: ${uptime_str}${NC}"
+    echo "${C1}   //   \\ \\      ${C2}Memory: ${mem}${NC}"
+    echo "${C1}  (|     | )     ${C2}Disk (/): ${disk}${NC}"
+    echo "${C1} /'\\_   _/'\\     ${C2}Local IP: ${lip}${NC}"
+    echo "${C1} \\___)=(___/     ${C2}Public IP: ${pip}${NC}"
     echo ""
 }
 
