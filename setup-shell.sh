@@ -909,10 +909,10 @@ fetch() {
     echo "${C1}       .---.       ${C2}OS: ${os} ${arch}${NC}"
     echo "${C1}      /     \\      ${C2}Kernel: ${kernel}${NC}"
     echo "${C1}      \\.@-@./      ${C2}Uptime: ${uptime_str}${NC}"
-    echo "${C1}      /\`\\_/\`\\      ${C2}Memory: ${mem}${NC}"
+    echo "${C1}      /'\\_/'\      ${C2}Memory: ${mem}${NC}"
     echo "${C1}     //  _  \\\\     ${C2}Disk (/): ${disk}${NC}"
     echo "${C1}    | \\     )|_    ${C2}Local IP: ${lip}${NC}"
-    echo "${C1}   /\`\\_\`>  <_/ \\   ${C2}Public IP: ${pip}${NC}"
+    echo "${C1}   /'\\_'>  <_/ \\   ${C2}Public IP: ${pip}${NC}"
     echo "${C1}   \\__/'---'\\__/${NC}"
     echo ""
 }
