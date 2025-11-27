@@ -862,6 +862,55 @@ shellhelp() {
 HELP
 }
 
+# === FETCH (system info) ===
+fetch() {
+    local C1='\033[1;36m' C2='\033[0;37m' NC='\033[0m'
+
+    # OS info
+    local os="" kernel="" uptime_str="" mem="" disk="" lip="" pip=""
+
+    if [[ -f /etc/os-release ]]; then
+        os=$(. /etc/os-release && echo "$PRETTY_NAME")
+    fi
+    kernel=$(uname -r)
+
+    # Uptime
+    if [[ -f /proc/uptime ]]; then
+        local up_sec=${$(</proc/uptime)%% *}
+        local days=$((${up_sec%.*} / 86400))
+        local hours=$(( (${up_sec%.*} % 86400) / 3600 ))
+        local mins=$(( (${up_sec%.*} % 3600) / 60 ))
+        uptime_str="${days}d ${hours}h ${mins}m"
+    fi
+
+    # Memory
+    if [[ -f /proc/meminfo ]]; then
+        local mem_total=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+        local mem_avail=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+        local mem_used=$((mem_total - mem_avail))
+        mem="${mem_used}M / ${mem_total}M"
+    fi
+
+    # Disk
+    disk=$(df -h / 2>/dev/null | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}')
+
+    # IPs
+    lip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    pip=$(curl -s --max-time 1 ifconfig.me 2>/dev/null || echo "N/A")
+
+    printf "${C1}         _    ${C2}OS: %s${NC}\n" "$os"
+    printf "${C1}     ---(_)   ${C2}Kernel: %s${NC}\n" "$kernel"
+    printf "${C1} _/  ---  \\   ${C2}Uptime: %s${NC}\n" "$uptime_str"
+    printf "${C1}(_) |   |     ${C2}Memory: %s${NC}\n" "$mem"
+    printf "${C1}  \\  --- _/   ${C2}Disk (/): %s${NC}\n" "$disk"
+    printf "${C1}     ---(_)   ${C2}Local IP: %s${NC}\n" "$lip"
+    printf "              ${C2}Public IP: %s${NC}\n" "$pip"
+    echo ""
+}
+
+# Pokaż fetch przy starcie (tylko interaktywny shell)
+[[ -o interactive ]] && fetch
+
 # === LOKALNA KONFIGURACJA ===
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
 ZSHRC
