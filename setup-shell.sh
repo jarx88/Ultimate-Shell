@@ -864,18 +864,22 @@ HELP
 
 # === FETCH (system info) ===
 fetch() {
-    local C1=$'\033[1;36m' C2=$'\033[0;37m' NC=$'\033[0m'
+    local C1 C2 NC
+    C1=$(printf '\033[1;36m')
+    C2=$(printf '\033[0;37m')
+    NC=$(printf '\033[0m')
 
     # OS
-    local os=""
-    [[ -f /etc/os-release ]] && os=$(source /etc/os-release && echo "$PRETTY_NAME")
-    local kernel=$(uname -r)
-    local arch=$(uname -m)
+    local os="" kernel="" arch=""
+    [[ -f /etc/os-release ]] && os=$(. /etc/os-release && echo "$PRETTY_NAME")
+    kernel=$(uname -r)
+    arch=$(uname -m)
 
     # Uptime
-    local uptime_str=""
+    local uptime_str="N/A"
     if [[ -f /proc/uptime ]]; then
-        local up_sec=$(cut -d. -f1 /proc/uptime)
+        local up_sec
+        up_sec=$(awk '{print int($1)}' /proc/uptime)
         local days=$((up_sec / 86400))
         local hours=$(( (up_sec % 86400) / 3600 ))
         local mins=$(( (up_sec % 3600) / 60 ))
@@ -883,34 +887,37 @@ fetch() {
     fi
 
     # Memory
-    local mem=""
+    local mem="N/A"
     if [[ -f /proc/meminfo ]]; then
-        local mem_total=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
-        local mem_avail=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
-        local mem_used=$((mem_total - mem_avail))
+        local mem_total mem_avail mem_used
+        mem_total=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+        mem_avail=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo)
+        mem_used=$((mem_total - mem_avail))
         mem="${mem_used}M / ${mem_total}M"
     fi
 
     # Disk
-    local disk=$(df -h / 2>/dev/null | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}')
+    local disk
+    disk=$(df -h / 2>/dev/null | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}')
 
     # IPs
-    local lip=$(hostname -I 2>/dev/null | awk '{print $1}')
-    local pip=$(timeout 1 curl -s ifconfig.me 2>/dev/null || echo "N/A")
+    local lip pip
+    lip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    pip=$(timeout 1 curl -s ifconfig.me 2>/dev/null || echo "N/A")
 
     echo ""
-    printf "${C1}         _    ${C2}OS: %s %s${NC}\n" "$os" "$arch"
-    printf "${C1}     ---(_)   ${C2}Kernel: %s${NC}\n" "$kernel"
-    printf "${C1} _/  ---  \\   ${C2}Uptime: %s${NC}\n" "$uptime_str"
-    printf "${C1}(_) |   |     ${C2}Memory: %s${NC}\n" "$mem"
-    printf "${C1}  \\  --- _/   ${C2}Disk (/): %s${NC}\n" "$disk"
-    printf "${C1}     ---(_)   ${C2}Local IP: %s${NC}\n" "$lip"
-    printf "${C1}              ${C2}Public IP: %s${NC}\n" "$pip"
+    echo "${C1}         _    ${C2}OS: ${os} ${arch}${NC}"
+    echo "${C1}     ---(_)   ${C2}Kernel: ${kernel}${NC}"
+    echo "${C1} _/  ---  \\   ${C2}Uptime: ${uptime_str}${NC}"
+    echo "${C1}(_) |   |     ${C2}Memory: ${mem}${NC}"
+    echo "${C1}  \\  --- _/   ${C2}Disk (/): ${disk}${NC}"
+    echo "${C1}     ---(_)   ${C2}Local IP: ${lip}${NC}"
+    echo "${C1}              ${C2}Public IP: ${pip}${NC}"
     echo ""
 }
 
-# Pokaż fetch przy starcie (tylko interaktywny terminal)
-[[ $- == *i* ]] && fetch
+# Pokaż fetch przy starcie
+fetch
 
 # === LOKALNA KONFIGURACJA ===
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
