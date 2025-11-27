@@ -971,18 +971,22 @@ setup_shell() {
     
     # Zmień shell
     if [[ "$SHELL" != "$zsh_path" ]]; then
-        if chsh -s "$zsh_path" 2>/dev/null; then
+        local shell_changed=0
+
+        # Try sudo chsh first (no password prompt)
+        if [[ "$HAVE_SUDO" == "1" ]] && sudo chsh -s "$zsh_path" "$USER" 2>/dev/null; then
+            shell_changed=1
             log_ok "Shell zmieniony na zsh"
-        else
-            # Fallback - auto-exec w bashrc
-            if ! grep -q "exec.*zsh" "$HOME/.bashrc" 2>/dev/null; then
-                cat >> "$HOME/.bashrc" << EOF
+        fi
+
+        # Fallback - auto-exec w bashrc (always add for reliability)
+        if [[ $shell_changed -eq 0 ]] && ! grep -q "exec.*zsh" "$HOME/.bashrc" 2>/dev/null; then
+            cat >> "$HOME/.bashrc" << EOF
 
 # Auto-start zsh
 [[ -z "\$ZSH_VERSION" && -x "$zsh_path" ]] && exec "$zsh_path" -l
 EOF
-                log_ok "Dodano auto-start zsh do .bashrc"
-            fi
+            log_ok "Dodano auto-start zsh do .bashrc"
         fi
     fi
 }
