@@ -973,8 +973,8 @@ setup_shell() {
     if [[ "$SHELL" != "$zsh_path" ]]; then
         local shell_changed=0
 
-        # Try sudo chsh first (no password prompt)
-        if [[ "$HAVE_SUDO" == "1" ]] && sudo chsh -s "$zsh_path" "$USER" 2>/dev/null; then
+        # Try sudo chsh first (no password prompt, no stdin)
+        if [[ "$HAVE_SUDO" == "1" ]] && sudo chsh -s "$zsh_path" "$USER" </dev/null >/dev/null 2>&1; then
             shell_changed=1
             log_ok "Shell zmieniony na zsh"
         fi
@@ -1028,13 +1028,13 @@ show_summary() {
     echo "  1. Wyloguj się i zaloguj ponownie"
     echo "     lub uruchom: exec zsh"
     echo ""
-    echo "  2. Wpisz ${BOLD}shellhelp${NC} żeby zobaczyć skróty"
+    echo -e "  2. Wpisz ${BOLD}shellhelp${NC} żeby zobaczyć skróty"
     echo ""
     echo "  3. Wypróbuj:"
-    echo "     ${DIM}Ctrl+R${NC}  - szukaj w historii"
-    echo "     ${DIM}z nazwa${NC} - inteligentne cd"
-    echo "     ${DIM}ll${NC}      - lista plików"
-    [[ $INSTALL_LAZYGIT -eq 1 ]] && echo "     ${DIM}lg${NC}      - lazygit"
+    echo -e "     ${DIM}Ctrl+R${NC}  - szukaj w historii"
+    echo -e "     ${DIM}z nazwa${NC} - inteligentne cd"
+    echo -e "     ${DIM}ll${NC}      - lista plików"
+    [[ $INSTALL_LAZYGIT -eq 1 ]] && echo -e "     ${DIM}lg${NC}      - lazygit"
     echo ""
 }
 
