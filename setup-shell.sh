@@ -873,9 +873,10 @@ HELP
 
 # === FETCH (system info) ===
 fetch() {
-    local C1 C2 NC
-    C1=$(printf '\033[1;36m')
-    C2=$(printf '\033[0;37m')
+    local C1 LBL VAL NC
+    C1=$(printf '\033[1;36m')    # Cyan bold - Tux art
+    LBL=$(printf '\033[1;33m')   # Yellow bold - labels (OS:, Kernel:, etc.)
+    VAL=$(printf '\033[0;37m')   # White - values
     NC=$(printf '\033[0m')
 
     # OS
@@ -915,13 +916,13 @@ fetch() {
     pip=$(timeout 1 curl -s ifconfig.me 2>/dev/null || echo "N/A")
 
     echo ""
-    echo "${C1}     .--.        ${C2}OS: ${os} ${arch}${NC}"
-    echo "${C1}    |o_o |       ${C2}Kernel: ${kernel}${NC}"
-    echo "${C1}    |:_/ |       ${C2}Uptime: ${uptime_str}${NC}"
-    echo "${C1}   //   \\ \\      ${C2}Memory: ${mem}${NC}"
-    echo "${C1}  (|     | )     ${C2}Disk (/): ${disk}${NC}"
-    echo "${C1} /'\\_   _/'\\     ${C2}Local IP: ${lip}${NC}"
-    echo "${C1} \\___)=(___/     ${C2}Public IP: ${pip}${NC}"
+    echo "${C1}     .--.        ${LBL}OS:${VAL} ${os} ${arch}${NC}"
+    echo "${C1}    |o_o |       ${LBL}Kernel:${VAL} ${kernel}${NC}"
+    echo "${C1}    |:_/ |       ${LBL}Uptime:${VAL} ${uptime_str}${NC}"
+    echo "${C1}   //   \\ \\      ${LBL}Memory:${VAL} ${mem}${NC}"
+    echo "${C1}  (|     | )     ${LBL}Disk (/):${VAL} ${disk}${NC}"
+    echo "${C1} /'\\_   _/'\\     ${LBL}Local IP:${VAL} ${lip}${NC}"
+    echo "${C1} \\___)=(___/     ${LBL}Public IP:${VAL} ${pip}${NC}"
     echo ""
 }
 
