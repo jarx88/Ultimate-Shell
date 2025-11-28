@@ -739,6 +739,10 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' group-name ''
 zstyle ':completion:*:descriptions' format '%B%d%b'
 
+# Tab uruchamia menu-complete (pokazuje menu z opcjami)
+bindkey '^I' menu-complete
+bindkey '^[[Z' reverse-menu-complete  # Shift+Tab - wstecz
+
 # Nawigacja strzałkami w menu kompletacji
 bindkey -M menuselect '^[[A' up-line-or-history        # Up
 bindkey -M menuselect '^[[B' down-line-or-history      # Down
