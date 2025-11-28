@@ -730,9 +730,25 @@ setopt INTERACTIVE_COMMENTS COMPLETE_IN_WORD NO_BEEP
 
 # === KOMPLETACJE ===
 autoload -Uz compinit && compinit -C
+zmodload zsh/complist
+
+# Menu selection - Tab pokazuje menu, strzałki nawigują
 zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:descriptions' format '%B%d%b'
+
+# Nawigacja strzałkami w menu kompletacji
+bindkey -M menuselect '^[[A' up-line-or-history        # Up
+bindkey -M menuselect '^[[B' down-line-or-history      # Down
+bindkey -M menuselect '^[[D' backward-char             # Left
+bindkey -M menuselect '^[[C' forward-char              # Right
+bindkey -M menuselect '^[OA' up-line-or-history        # Up (alt)
+bindkey -M menuselect '^[OB' down-line-or-history      # Down (alt)
+bindkey -M menuselect '^[OD' backward-char             # Left (alt)
+bindkey -M menuselect '^[OC' forward-char              # Right (alt)
+bindkey -M menuselect '^M' .accept-line                # Enter - wybierz i wykonaj
 
 # === ANTIGEN ===
 [[ -f "$HOME/antigen.zsh" ]] && {
