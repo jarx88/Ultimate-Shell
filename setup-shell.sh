@@ -728,31 +728,9 @@ setopt HIST_IGNORE_SPACE HIST_FIND_NO_DUPS SHARE_HISTORY
 setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS CORRECT
 setopt INTERACTIVE_COMMENTS COMPLETE_IN_WORD NO_BEEP
 
-# === KOMPLETACJE ===
-autoload -Uz compinit && compinit -C
+# === KOMPLETACJE (podstawowe) ===
+autoload -Uz compinit && compinit -u
 zmodload zsh/complist
-
-# Menu selection - Tab pokazuje menu, strzałki nawigują
-zstyle ':completion:*' menu select
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
-zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*:descriptions' format '%B%d%b'
-
-# Tab uruchamia menu-complete (pokazuje menu z opcjami)
-bindkey '^I' menu-complete
-bindkey '^[[Z' reverse-menu-complete  # Shift+Tab - wstecz
-
-# Nawigacja strzałkami w menu kompletacji
-bindkey -M menuselect '^[[A' up-line-or-history        # Up
-bindkey -M menuselect '^[[B' down-line-or-history      # Down
-bindkey -M menuselect '^[[D' backward-char             # Left
-bindkey -M menuselect '^[[C' forward-char              # Right
-bindkey -M menuselect '^[OA' up-line-or-history        # Up (alt)
-bindkey -M menuselect '^[OB' down-line-or-history      # Down (alt)
-bindkey -M menuselect '^[OD' backward-char             # Left (alt)
-bindkey -M menuselect '^[OC' forward-char              # Right (alt)
-bindkey -M menuselect '^M' .accept-line                # Enter - wybierz i wykonaj
 
 # === ANTIGEN ===
 [[ -f "$HOME/antigen.zsh" ]] && {
@@ -948,6 +926,27 @@ fetch() {
 
 # Pokaż fetch przy starcie
 fetch
+
+# === MENU KOMPLETACJI (musi być na końcu, po pluginach) ===
+zstyle ':completion:*' menu select=1
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' pager ''
+
+# Tab - pokaż menu i nawiguj strzałkami
+bindkey '^I' menu-complete
+bindkey '^[[Z' reverse-menu-complete
+
+# Strzałki w menu kompletacji
+bindkey -M menuselect '^[[A' up-line-or-history
+bindkey -M menuselect '^[[B' down-line-or-history
+bindkey -M menuselect '^[[D' backward-char
+bindkey -M menuselect '^[[C' forward-char
+bindkey -M menuselect '^[OA' up-line-or-history
+bindkey -M menuselect '^[OB' down-line-or-history
+bindkey -M menuselect '^[OD' backward-char
+bindkey -M menuselect '^[OC' forward-char
+bindkey -M menuselect '^M' .accept-line
 
 # === LOKALNA KONFIGURACJA ===
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
