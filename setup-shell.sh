@@ -968,34 +968,32 @@ ZSHRC
 
 generate_zshenv() {
     # Zoxide for non-interactive shells (VSCode, Claude Code, CI/CD, scripts)
-    # Condition [[ ! -o interactive ]] prevents double loading since .zshrc
-    # already loads zoxide for interactive shells
     [[ $INSTALL_ZOXIDE -eq 0 ]] && return
 
-    log_info "Konfiguruję zoxide dla non-interactive shells..."
+    local marker="# Zoxide for non-interactive shells"
 
-    local zshenv_content='# Zoxide for non-interactive shells (VSCode, Claude Code, scripts, CI/CD)
-# This ensures "cd" works correctly in non-interactive environments
-# Condition prevents double loading - .zshrc handles interactive shells
-if [[ ! -o interactive ]] && command -v zoxide &>/dev/null; then
-    eval "$(zoxide init zsh --cmd cd)"
-fi'
-
-    # Check if zshenv exists and already has zoxide config
-    if [[ -f "$ZSHENV" ]] && grep -q "zoxide.*non-interactive" "$ZSHENV" 2>/dev/null; then
+    # Skip if already configured
+    if [[ -f "$ZSHENV" ]] && grep -q "$marker" "$ZSHENV" 2>/dev/null; then
         log_ok "Zoxide już skonfigurowany w .zshenv"
         return
     fi
 
-    # Append to existing .zshenv or create new one
-    if [[ -f "$ZSHENV" ]]; then
-        # Backup existing
-        cp "$ZSHENV" "${ZSHENV}.bak.$(date +%s)" 2>/dev/null || true
-        echo "" >> "$ZSHENV"
-        echo "$zshenv_content" >> "$ZSHENV"
-    else
-        echo "$zshenv_content" > "$ZSHENV"
-    fi
+    log_info "Konfiguruję zoxide dla non-interactive shells..."
+
+    # Backup existing file
+    [[ -f "$ZSHENV" ]] && cp "$ZSHENV" "${ZSHENV}.backup.$(date +%Y%m%d%H%M%S)" 2>/dev/null || true
+
+    cat >> "$ZSHENV" << 'EOF'
+
+# Zshenv - loaded for ALL zsh sessions (interactive and non-interactive)
+
+# Zoxide for non-interactive shells (VSCode, Claude Code, scripts, CI/CD)
+# This ensures "cd" works correctly in non-interactive environments
+# Condition prevents double loading - .zshrc handles interactive shells
+if [[ ! -o interactive ]] && command -v zoxide &>/dev/null; then
+    eval "$(zoxide init zsh --cmd cd)"
+fi
+EOF
 
     log_ok "Zoxide skonfigurowany dla non-interactive shells (.zshenv)"
 }
